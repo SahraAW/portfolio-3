@@ -1,9 +1,10 @@
-// Initialize game state variables
-let secretNumber = Math.floor(Math.random() * 20) + 1; // Random number between 1 and 20
-let score = 20;
-let highscore = 0;
+// spille starter
+let secretNumber = Math.floor(Math.random() * 20) + 1; //  alle nummer mellem 1 and 20
+let score = 0;
+let highscore = Infinity;
+let guesses = []; // huske tal
 
-// Selecting elements
+// elements
 const guessInput = document.querySelector('.guess');
 const checkButton = document.querySelector('.check');
 const againButton = document.querySelector('.again');
@@ -11,59 +12,102 @@ const messageDisplay = document.querySelector('.message');
 const scoreDisplay = document.querySelector('.score');
 const highscoreDisplay = document.querySelector('.highscore');
 const numberDisplay = document.querySelector('.number');
+const body = document.querySelector('body');
 
-// Function to display message
+// Function to display a message to the user
 const displayMessage = function (message) {
     messageDisplay.textContent = message;
 };
 
-// Check Button Click Event
+// functon til huske gæt på
+const updateGuessHistory = function (guess) {
+    guesses.push(guess);
+    document.querySelector('.message').textContent = `Guesses so far: ${guesses.join(', ')}`;
+};
+
+// Button click
 checkButton.addEventListener('click', function () {
     const userGuess = Number(guessInput.value);
 
-    // When there is no input
+    // Validate the input
     if (!userGuess || userGuess < 1 || userGuess > 20) {
-        displayMessage('⛔️ Please enter a number between 1 and 20!');
+        displayMessage('⛔️ Enter a valid number between 1 and 20!');
+        return;
+    }
 
-        // When the guess is correct
-    } else if (userGuess === secretNumber) {
+
+    updateGuessHistory(userGuess);
+
+    // korrect
+    if (userGuess === secretNumber) {
         displayMessage('🎉 Correct Number!');
-        numberDisplay.textContent = secretNumber; // Show the secret number
-        document.body.style.backgroundColor = '#60b347'; // Change background color on correct guess
+        numberDisplay.textContent = secretNumber; // hvis det secret nummer
+        body.style.backgroundColor = '#60b347'; // ændrer farver
 
-        // Update the highscore if the current score is higher
-        if (score > highscore) {
+        // hvis scoren er for lav
+        if (score < highscore) {
             highscore = score;
             highscoreDisplay.textContent = highscore;
         }
+        // Clear input
+        guessInput.value = '';
+        confetti(); // Trigger confetti
 
-        // When the guess is wrong
-    } else if (userGuess !== secretNumber) {
-        if (score > 1) {
-            displayMessage(userGuess > secretNumber ? '📈 Too high!' : '📉 Too low!');
-            score--; // Decrease score
-            scoreDisplay.textContent = score; // Update score display
-            guessInput.value = ''; // Clear the input field
-        } else {
-            displayMessage('💥 You lost the game!');
-            scoreDisplay.textContent = 0;
-        }
+
+    } else {
+        // når gæt er forkert start spil om
+        score++;
+        scoreDisplay.textContent = score;
+        guessInput.value = ''; // roder alt
+
+        // giv feedback om score er for højt eller lavt
+        displayMessage(userGuess > secretNumber ? '📈 Too high!' : '📉 Too low!');
+
     }
 });
 
-// Again Button Click Event (Reset Game)
+//  Again button reset
 againButton.addEventListener('click', function () {
-    // Reset the game state
-    score = 20;
-    secretNumber = Math.floor(Math.random() * 20) + 1;
+    score = 0;
+    guesses = [];
+    secretNumber = Math.floor(Math.random() * 20) + 1; // nyt nummer
 
-    // Reset display and input fields
-    numberDisplay.textContent = '?';
+    // Reset UI elements
     scoreDisplay.textContent = score;
+    highscoreDisplay.textContent = highscore;
+    numberDisplay.textContent = '?';
     displayMessage('Start guessing...');
     guessInput.value = '';
 
-    // Reset styling
-    document.body.style.backgroundColor = '#222';
-    numberDisplay.style.width = '15rem';
+    // Reset baggrund farver and gæt  histore
+    body.style.backgroundColor = '#222';
 });
+
+
+
+// Confetti
+function confetti() {
+    const confettiCount = 5;
+    const defaults = {
+        spread: 360,
+        ticks: 60,
+        gravity: 0.5,
+        decay: 0.9,
+        startVelocity: 30,
+        shapes: ['square', 'circle'],
+        colors: ['#bb0000', '#ffffff'],
+    };
+
+    function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    confetti({
+        particleCount: confettiCount,
+        angle: randomInRange(55, 125),
+        spread: randomInRange(50, 70),
+        origin: { y: 0.6 },
+        colors: ['#bb0000', '#ffffff'],
+    });
+}
+
